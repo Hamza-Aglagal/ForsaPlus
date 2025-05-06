@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { fontSize, fontWeight } from '../../theme/typography';
+import { authService } from '../../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -174,6 +175,29 @@ const ArticleCard = ({ article, onPress }) => (
 
 // Main Component
 const HomeScreen = ({ navigation }) => {
+  const [user, setUser] = useState({
+    firstName: '',
+    lastName: ''
+  });
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userData = await authService.getStoredUser();
+        if (userData) {
+          setUser({
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    loadUserData();
+  }, []);
+
   const handleJobPress = (job) => {
     navigation.navigate('JobDetail', { job });
   };
@@ -197,7 +221,7 @@ const HomeScreen = ({ navigation }) => {
         >
           <View style={styles.headerTop}>
             <View>
-              <Text style={[styles.greeting, { color: colors.white }]}>Bonjour, Hamza 👋</Text>
+              <Text style={[styles.greeting, { color: colors.white }]}>Bonjour, {user.firstName} 👋</Text>
               <Text style={[styles.subtitle, { color: 'rgba(255, 255, 255, 0.9)' }]}>Découvrez de nouvelles opportunités</Text>
             </View>
             <TouchableOpacity style={[styles.notificationButton, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>

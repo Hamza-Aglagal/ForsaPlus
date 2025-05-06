@@ -15,6 +15,7 @@ import { spacing } from '../../theme/spacing';
 import { fontSize, fontWeight } from '../../theme/typography';
 import Button from '../../components/Button';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { authService } from '../../services/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -28,6 +29,38 @@ const WelcomeScreen = ({ navigation }) => {
   const floatAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Check if user is already logged in and redirect if necessary
+    const checkAuthStatus = async () => {
+      try {
+        const isLoggedIn = await authService.isLoggedIn();
+        if (isLoggedIn) {
+          const user = await authService.getStoredUser();
+          if (user && user.userType) {
+            // Navigate to the appropriate screen based on user type
+            switch(user.userType) {
+              case 'highschool':
+                navigation.replace('HighSchoolStudentApp');
+                break;
+              case 'university':
+                navigation.replace('UniversityStudentApp');
+                break;
+              case 'graduate':
+                navigation.replace('GraduateApp');
+                break;
+              default:
+                // If user type is unknown, go to user type selection
+                navigation.replace('UserType');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        // Continue with welcome screen if there's an error
+      }
+    };
+    
+    checkAuthStatus();
+
     // Start animations when component mounts
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -73,7 +106,7 @@ const WelcomeScreen = ({ navigation }) => {
         }),
       ])
     ).start();
-  }, []);
+  }, [navigation]);
 
   const handleGetStarted = () => {
     navigation.navigate('UserType');

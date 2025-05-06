@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,11 +15,34 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../theme/colors';
 import { fontSize, fontWeight } from '../../theme/typography';
 import LinearGradient from 'react-native-linear-gradient';
+import { authService } from '../../services/api';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
+  const [user, setUser] = useState({
+    firstName: '',
+    lastName: ''
+  });
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userData = await authService.getStoredUser();
+        if (userData) {
+          setUser({
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    loadUserData();
+  }, []);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -108,7 +131,7 @@ const HomeScreen = ({ navigation }) => {
       >
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.greeting}>Bonjour, Hamza</Text>
+            <Text style={styles.greeting}>Bonjour, {user.firstName}</Text>
             <Text style={styles.subGreeting}>Bon retour parmi nous!</Text>
           </View>
           <TouchableOpacity style={styles.profileButton}>

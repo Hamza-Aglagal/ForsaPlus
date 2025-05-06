@@ -87,8 +87,11 @@ const StudentInterestsScreen = ({ navigation, route }) => {
       interests: selectedInterestsData,
     };
     
-    // Navigate to the app with the complete profile
-    navigation.replace('HighSchoolStudentApp', { studentInfo: updatedStudentInfo });
+    // Navigate to Register instead of directly to the app
+    navigation.navigate('Register', { 
+      studentInfo: updatedStudentInfo,
+      userType: 'highschool'
+    });
   };
 
   return (

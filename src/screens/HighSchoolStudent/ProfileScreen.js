@@ -8,13 +8,16 @@ import {
   SafeAreaView,
   Image,
   Switch,
-  TextInput
+  TextInput,
+  Alert
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { fontSize, fontWeight } from '../../theme/typography';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import { authService } from '../../services/api';
+import { useNavigation } from '@react-navigation/native';
 
 const ProfileMenuItem = ({ icon, title, subtitle, badge, onPress }) => {
   return (
@@ -93,6 +96,7 @@ const InterestTag = ({ title, isSelected, onPress }) => {
 };
 
 const ProfileScreen = () => {
+  const navigation = useNavigation();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
   const [languagePreference, setLanguagePreference] = useState('Français');
@@ -123,6 +127,36 @@ const ProfileScreen = () => {
     } else {
       setSelectedInterests([...selectedInterests, interest]);
     }
+  };
+
+  // Handle logout with confirmation
+  const handleLogout = () => {
+    Alert.alert(
+      "Déconnexion",
+      "Êtes-vous sûr de vouloir vous déconnecter?",
+      [
+        {
+          text: "Annuler",
+          style: "cancel"
+        },
+        {
+          text: "Déconnecter",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await authService.logout();
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }]
+              });
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Erreur', 'Échec de la déconnexion. Veuillez réessayer.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -316,8 +350,8 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton}>
+        {/* Logout Button - Update the onPress handler */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <LinearGradient
             colors={['#FF6B6B', '#FF4757']}
             style={styles.logoutIconContainer}

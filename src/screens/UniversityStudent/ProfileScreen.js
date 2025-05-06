@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
-  Platform
+  Platform,
+  Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../theme/colors';
 import { fontSize, fontWeight, lineHeight } from '../../theme/typography';
 import LinearGradient from 'react-native-linear-gradient';
+import { authService } from '../../services/api';
+import { useNavigation } from '@react-navigation/native';
 
 // Sample user data
 const USER_DATA = {
@@ -71,8 +74,39 @@ const USER_DATA = {
   ]
 };
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation: navigationProp }) => {
+  const navigation = useNavigation();
   const [userData] = useState(USER_DATA);
+  
+  // Handle logout with confirmation
+  const handleLogout = () => {
+    Alert.alert(
+      "Déconnexion",
+      "Êtes-vous sûr de vouloir vous déconnecter?",
+      [
+        {
+          text: "Annuler",
+          style: "cancel"
+        },
+        {
+          text: "Déconnecter",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await authService.logout();
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }]
+              });
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Erreur', 'Échec de la déconnexion. Veuillez réessayer.');
+            }
+          }
+        }
+      ]
+    );
+  };
   
   // Skill progress bar component
   const SkillBar = ({ name, level }) => (
@@ -283,6 +317,15 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.actionButtonText}>Partager mon profil</Text>
           </TouchableOpacity>
         </View>
+        
+        {/* Logout Button */}
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <Icon name="logout" size={20} color={colors.white} />
+          <Text style={styles.logoutText}>Déconnexion</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -583,7 +626,35 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.medium,
     color: colors.universityStudent,
     marginLeft: 8,
-  }
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.error,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    marginTop: 20,
+    marginHorizontal: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  logoutText: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semiBold,
+    color: colors.white,
+    marginLeft: 8,
+  },
 });
 
 export default ProfileScreen; 

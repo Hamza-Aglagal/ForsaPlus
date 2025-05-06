@@ -7,7 +7,8 @@ import {
   KeyboardAvoidingView, 
   Platform, 
   ScrollView,
-  SafeAreaView
+  SafeAreaView,
+  Alert
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -16,10 +17,14 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import { authService } from '../../services/api';
 
 const RegisterScreen = ({ navigation, route }) => {
-  const userType = route?.params?.userType || '';
-  const [name, setName] = useState('');
+  const userType = route?.params?.userType || 'university'; // Default to university if not specified
+  const studentInfo = route?.params?.studentInfo || {};
+  
+  const [firstName, setFirstName] = useState(studentInfo.firstName || '');
+  const [lastName, setLastName] = useState(studentInfo.lastName || '');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -29,9 +34,14 @@ const RegisterScreen = ({ navigation, route }) => {
   const validate = () => {
     const newErrors = {};
 
-    // Name validation
-    if (!name) {
-      newErrors.name = 'Le nom est requis';
+    // First Name validation
+    if (!firstName) {
+      newErrors.firstName = 'Le prénom est requis';
+    }
+
+    // Last Name validation
+    if (!lastName) {
+      newErrors.lastName = 'Le nom est requis';
     }
 
     // Email validation
@@ -59,22 +69,72 @@ const RegisterScreen = ({ navigation, route }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (validate()) {
       setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false);
+      
+      try {
+        // Prepare user data
+        const userData = {
+          firstName,
+          lastName,
+          email,
+          password,
+          userType,
+          // Include studentInfo for highschool students
+          ...(userType === 'highschool' && studentInfo ? {
+            schoolName: studentInfo.schoolName,
+            bacType: studentInfo.bacType,
+            bacYear: studentInfo.bacYear,
+            bacMention: studentInfo.bacMention,
+            interests: studentInfo.interests || []
+          } : {})
+        };
+        
+        console.log('Registering with data:', {
+          ...userData,
+          password: '********' // Don't log actual password
+        });
+        
+        // Call register API
+        const response = await authService.register(userData);
+        console.log('Registration successful:', response);
+        
         // Navigate based on user type after successful registration
-        if (userType === 'university') {
-          navigation.replace('UniversityStudentApp', { isAuthenticated: true });
-        } else if (userType === 'graduate') {
-          navigation.replace('GraduateApp', { isAuthenticated: true });
+        const userTypeFromResponse = response.user.userType;
+        
+        if (userTypeFromResponse === 'university') {
+          navigation.replace('UniversityStudentApp');
+        } else if (userTypeFromResponse === 'graduate') {
+          navigation.replace('GraduateApp');
+        } else if (userTypeFromResponse === 'highschool') {
+          navigation.replace('HighSchoolStudentApp');
         } else {
-          // If no user type or unknown, go to user type selection
-          navigation.replace('UserType', { isAuthenticated: true });
+          // If no specific user type, go to user type selection
+          navigation.replace('UserType');
         }
-      }, 1500);
+      } catch (error) {
+        // Handle registration error
+        console.error('Registration error:', error);
+        
+        // Display appropriate error message
+        let errorMessage = 'Une erreur s\'est produite lors de la création du compte.';
+        
+        if (error.error === 'Network Error') {
+          errorMessage = 'Impossible de se connecter au serveur. Vérifiez votre connexion internet.';
+        } else if (error.error === 'User already exists with this email') {
+          errorMessage = 'Un utilisateur existe déjà avec cet email.';
+        } else if (error.error) {
+          errorMessage = error.error;
+        }
+        
+        Alert.alert(
+          'Échec de l\'inscription',
+          errorMessage
+        );
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -121,11 +181,20 @@ const RegisterScreen = ({ navigation, route }) => {
           {/* Form */}
           <View style={styles.formContainer}>
             <Input
-              label="Nom complet"
-              placeholder="Entrez votre nom complet"
-              value={name}
-              onChangeText={setName}
-              error={errors.name}
+              label="Prénom"
+              placeholder="Entrez votre prénom"
+              value={firstName}
+              onChangeText={setFirstName}
+              error={errors.firstName}
+              leftIcon={<Icon name="account-outline" size={20} color={colors.gray600} />}
+            />
+
+            <Input
+              label="Nom"
+              placeholder="Entrez votre nom"
+              value={lastName}
+              onChangeText={setLastName}
+              error={errors.lastName}
               leftIcon={<Icon name="account-outline" size={20} color={colors.gray600} />}
             />
 
@@ -259,14 +328,13 @@ const styles = StyleSheet.create({
   },
   termsContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
+    alignItems: 'center',
+    marginVertical: spacing.md,
   },
   termsText: {
+    marginLeft: spacing.sm,
     fontSize: fontSize.sm,
     color: colors.textSecondary,
-    marginLeft: spacing.xs,
     flex: 1,
   },
   termsLink: {
@@ -278,17 +346,15 @@ const styles = StyleSheet.create({
   },
   footerContainer: {
     width: '100%',
-    marginTop: 'auto',
-    alignItems: 'center',
   },
   loginText: {
-    fontSize: fontSize.md,
-    color: colors.textSecondary,
     textAlign: 'center',
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
   },
   loginLink: {
     color: colors.primary,
-    fontWeight: fontWeight.semiBold,
+    fontWeight: fontWeight.medium,
   },
 });
 

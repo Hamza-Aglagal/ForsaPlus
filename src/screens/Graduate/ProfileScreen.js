@@ -7,15 +7,19 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
-  Switch
+  Switch,
+  Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { fontSize, fontWeight } from '../../theme/typography';
+import { authService } from '../../services/api';
+import { useNavigation } from '@react-navigation/native';
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation: navigationProp }) => {
+  const navigation = useNavigation();
   const [notifications, setNotifications] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
@@ -36,6 +40,36 @@ const ProfileScreen = ({ navigation }) => {
     applications: 8,
     viewed: 35,
     completionPercentage: 85,
+  };
+
+  // Handle logout with confirmation
+  const handleLogout = () => {
+    Alert.alert(
+      "Déconnexion",
+      "Êtes-vous sûr de vouloir vous déconnecter?",
+      [
+        {
+          text: "Annuler",
+          style: "cancel"
+        },
+        {
+          text: "Déconnecter",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await authService.logout();
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }]
+              });
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Erreur', 'Échec de la déconnexion. Veuillez réessayer.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const renderProgressBar = (progress) => {
@@ -284,8 +318,8 @@ const ProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         
-        {/* Logout button */}
-        <TouchableOpacity style={styles.logoutButton}>
+        {/* Logout button - Update with handleLogout */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Icon name="logout" size={18} color={colors.error} />
           <Text style={styles.logoutText}>Déconnexion</Text>
         </TouchableOpacity>

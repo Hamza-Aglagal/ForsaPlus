@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { spacing } from '../../theme/spacing';
 import { fontSize, fontWeight } from '../../theme/typography';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import { authService } from '../../services/api';
 
 const NewsCard = ({ title, date, source, image, onPress }) => {
   return (
@@ -95,15 +96,38 @@ const KeyDateCard = ({ title, date, icon, color, onPress }) => {
 };
 
 const HomeScreen = ({ navigation }) => {
-  const userInfo = {
-    firstName: 'Karim',
-    lastName: 'Benali',
+  const [user, setUser] = useState({
+    firstName: '',
+    lastName: '',
     avatar: null,
-    interests: ['Informatique', 'Ingénierie', 'Design'],
-    bacType: 'Sciences Mathématiques',
-    bacYear: '2023',
-    bacMention: 'Très Bien'
-  };
+    interests: [],
+    bacType: '',
+    bacYear: '',
+    bacMention: ''
+  });
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userData = await authService.getStoredUser();
+        if (userData) {
+          setUser({
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            avatar: userData.profileImage || null,
+            interests: userData.interests || [],
+            bacType: userData.bacType || '',
+            bacYear: userData.bacYear || '',
+            bacMention: userData.bacMention || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    loadUserData();
+  }, []);
 
   const keyDates = [
     {
@@ -203,18 +227,18 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.welcomeSection}>
                 <View>
                   <Text style={styles.welcomeText}>Bienvenue,</Text>
-                  <Text style={styles.userName}>{userInfo.firstName} !</Text>
+                  <Text style={styles.userName}>{user.firstName} !</Text>
                   <View style={styles.userBacInfo}>
                     <Icon name="school" size={16} color={colors.white} style={{ marginRight: 4 }} />
-                    <Text style={styles.bacInfo}>{userInfo.bacType} | {userInfo.bacMention}</Text>
+                    <Text style={styles.bacInfo}>{user.bacType} | {user.bacMention}</Text>
                   </View>
                 </View>
                 <TouchableOpacity style={styles.avatarContainer}>
-                  {userInfo.avatar ? (
-                    <Image source={{ uri: userInfo.avatar }} style={styles.avatarImage} />
+                  {user.avatar ? (
+                    <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
                   ) : (
                     <View style={styles.avatarPlaceholder}>
-                      <Text style={styles.avatarText}>{userInfo.firstName.charAt(0)}{userInfo.lastName.charAt(0)}</Text>
+                      <Text style={styles.avatarText}>{user.firstName.charAt(0)}{user.lastName.charAt(0)}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -338,7 +362,7 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.recommendationsDescription}>
             <Icon name="information" size={18} color={colors.student} style={{ marginRight: 8 }} />
             <Text style={styles.recommendationsText}>
-              Basé sur votre profil {userInfo.bacType} et vos intérêts
+              Basé sur votre profil {user.bacType} et vos intérêts
             </Text>
           </View>
           

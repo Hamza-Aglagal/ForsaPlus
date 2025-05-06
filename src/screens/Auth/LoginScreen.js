@@ -8,7 +8,8 @@ import {
   Platform, 
   ScrollView,
   Image,
-  SafeAreaView
+  SafeAreaView,
+  Alert
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -17,6 +18,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import { authService } from '../../services/api';
 
 const LoginScreen = ({ navigation, route }) => {
   const userType = route?.params?.userType || '';
@@ -46,23 +48,52 @@ const LoginScreen = ({ navigation, route }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (validate()) {
       setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false);
+      
+      try {
+        console.log('Attempting login with email:', email);
+        
+        // Call login API
+        const response = await authService.login(email, password);
+        console.log('Login successful');
         
         // Navigate based on user type after successful login
-        if (userType === 'university') {
-          navigation.replace('UniversityStudentApp', { isAuthenticated: true });
-        } else if (userType === 'graduate') {
-          navigation.replace('GraduateApp', { isAuthenticated: true });
+        const userTypeFromResponse = response.user.userType;
+        
+        if (userTypeFromResponse === 'university') {
+          navigation.replace('UniversityStudentApp');
+        } else if (userTypeFromResponse === 'graduate') {
+          navigation.replace('GraduateApp');
+        } else if (userTypeFromResponse === 'highschool') {
+          navigation.replace('HighSchoolStudentApp');
         } else {
           // If no specific user type, just go to user type selection
-          navigation.replace('UserType', { isAuthenticated: true });
+          navigation.replace('UserType');
         }
-      }, 1500);
+      } catch (error) {
+        // Handle login error
+        console.error('Login error:', error);
+        
+        // Display appropriate error message
+        let errorMessage = 'Une erreur s\'est produite lors de la tentative de connexion.';
+        
+        if (error.error === 'Network Error') {
+          errorMessage = 'Impossible de se connecter au serveur. Vérifiez votre connexion internet.';
+        } else if (error.error === 'Invalid credentials') {
+          errorMessage = 'Email ou mot de passe incorrect.';
+        } else if (error.error) {
+          errorMessage = error.error;
+        }
+        
+        Alert.alert(
+          'Échec de connexion',
+          errorMessage
+        );
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -71,7 +102,7 @@ const LoginScreen = ({ navigation, route }) => {
   };
 
   const handleRegister = () => {
-    navigation.navigate('Register');
+    navigation.navigate('Register', { userType });
   };
 
   return (
@@ -248,7 +279,6 @@ const styles = StyleSheet.create({
   },
   footerContainer: {
     width: '100%',
-    marginTop: 'auto',
   },
   dividerContainer: {
     flexDirection: 'row',
@@ -261,40 +291,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gray300,
   },
   dividerText: {
-    paddingHorizontal: spacing.md,
+    marginHorizontal: spacing.md,
     color: colors.textSecondary,
     fontSize: fontSize.sm,
-  },
-  socialButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xl,
-  },
-  socialButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.md,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.gray300,
-    flex: 1,
-    marginHorizontal: spacing.xs,
-  },
-  socialButtonText: {
-    marginLeft: spacing.xs,
-    fontSize: fontSize.sm,
-    color: colors.textPrimary,
-    fontWeight: fontWeight.medium,
   },
   signupText: {
-    fontSize: fontSize.md,
-    color: colors.textSecondary,
     textAlign: 'center',
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
   },
   signupLink: {
     color: colors.primary,
-    fontWeight: fontWeight.semiBold,
+    fontWeight: fontWeight.medium,
   },
 });
 
