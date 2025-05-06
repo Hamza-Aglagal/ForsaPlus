@@ -2,12 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const fileUpload = require('express-fileupload');
+const path = require('path');
 
 // Load environment variables
 dotenv.config();
 
 // Import routes
 const authRoutes = require('./src/routes/auth');
+const interviewRoutes = require('./src/routes/interview');
 
 // Create Express app
 const app = express();
@@ -16,8 +19,28 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// File upload middleware
+app.use(fileUpload({
+  createParentPath: true,
+  limits: { 
+    fileSize: 50 * 1024 * 1024 // 50MB max file size
+  },
+  abortOnLimit: true
+}));
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+const fs = require('fs');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/interview', interviewRoutes);
 
 // Default route
 app.get('/', (req, res) => {

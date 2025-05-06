@@ -100,12 +100,15 @@ const InterviewScreen = ({ navigation }) => {
             
             <PracticeInterviewCard
               title="Entretien virtuel"
-              description="Simulez un entretien vidéo complet et recevez des retours"
+              description="Simulez un entretien vidéo complet et recevez des retours en temps réel sur vos réponses"
               numQuestions={15}
               icon="video"
               color={colors.graduate}
               progress={0}
-              onPress={() => {}}
+              onPress={() => navigation.navigate('VirtualInterviewScreen', {
+                category: 'technical',
+                level: 'intermediate'
+              })}
             />
           </View>
         </View>
@@ -251,25 +254,28 @@ const UpcomingInterviewCard = ({ company, position, date, time, logo, location, 
 const PracticeInterviewCard = ({ title, description, numQuestions, icon, color, progress, onPress }) => {
   return (
     <TouchableOpacity style={styles.practiceCard} onPress={onPress}>
-      <View style={[styles.practiceIconContainer, { backgroundColor: color + '15' }]}>
+      <View style={[styles.practiceIconContainer, { backgroundColor: color + '20' }]}>
         <Icon name={icon} size={24} color={color} />
       </View>
-      
-      <Text style={styles.practiceTitle}>{title}</Text>
-      <Text style={styles.practiceDescription}>{description}</Text>
-      
-      <View style={styles.practiceFooter}>
-        <Text style={styles.practiceQuestions}>{numQuestions} questions</Text>
-        
-        {progress > 0 ? (
-          <View style={styles.practiceProgressContainer}>
-            <View style={[styles.practiceProgress, { width: `${progress}%`, backgroundColor: color }]} />
+      <View style={styles.practiceCardContent}>
+        <Text style={styles.practiceCardTitle}>{title}</Text>
+        <Text style={styles.practiceCardDescription} numberOfLines={2}>
+          {description}
+        </Text>
+        <View style={styles.practiceCardFooter}>
+          <Text style={styles.practiceCardQuestions}>{numQuestions} questions</Text>
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${progress}%`, backgroundColor: color }
+                ]} 
+              />
+            </View>
+            <Text style={styles.progressText}>{progress}%</Text>
           </View>
-        ) : (
-          <View style={styles.newBadge}>
-            <Text style={styles.newBadgeText}>Nouveau</Text>
-          </View>
-        )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -431,47 +437,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
-  practiceTitle: {
+  practiceCardContent: {
+    flex: 1,
+  },
+  practiceCardTitle: {
     fontSize: fontSize.md,
     fontWeight: fontWeight.bold,
     color: colors.textPrimary,
     marginBottom: 4,
   },
-  practiceDescription: {
+  practiceCardDescription: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
-  practiceFooter: {
+  practiceCardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: spacing.xs,
   },
-  practiceQuestions: {
+  practiceCardQuestions: {
     fontSize: fontSize.xs,
     color: colors.textTertiary,
   },
-  practiceProgressContainer: {
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  progressBar: {
     width: 60,
     height: 4,
     backgroundColor: colors.gray100,
     borderRadius: 2,
   },
-  practiceProgress: {
+  progressFill: {
     height: '100%',
     borderRadius: 2,
   },
-  newBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    backgroundColor: colors.graduate + '20',
-    borderRadius: 4,
-  },
-  newBadgeText: {
-    fontSize: 10,
-    fontWeight: fontWeight.bold,
-    color: colors.graduate,
+  progressText: {
+    fontSize: fontSize.xs,
+    color: colors.textTertiary,
+    marginLeft: 8,
   },
   tipCard: {
     flexDirection: 'row',

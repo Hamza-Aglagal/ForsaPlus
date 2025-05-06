@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   StyleSheet, 
   TouchableOpacity, 
-  Text
+  Text,
+  Alert
 } from 'react-native';
 import { colors } from '../theme/colors';
 import { fontSize, fontWeight } from '../theme/typography';
@@ -18,6 +19,7 @@ import InterviewScreen from '../screens/Graduate/InterviewScreen';
 import ProfileScreen from '../screens/Graduate/ProfileScreen';
 import JobDetailScreen from '../screens/Graduate/JobDetailScreen';
 import NetworkingScreen from '../screens/Graduate/NetworkingScreen';
+import VirtualInterviewScreen from '../screens/Graduate/VirtualInterviewScreen';
 
 // Main navigator component
 const GraduateNavigator = ({ navigation, route }) => {
@@ -27,17 +29,26 @@ const GraduateNavigator = ({ navigation, route }) => {
   const [currentScreen, setCurrentScreen] = useState(null);
   const [screenParams, setScreenParams] = useState({});
   
+  // DEBUG: Track screen changes
+  useEffect(() => {
+    console.log('Current screen changed to:', currentScreen);
+  }, [currentScreen]);
+  
   const navigateToScreen = (screenName, params = {}) => {
+    console.log('Navigating to:', screenName, params);
     setCurrentScreen(screenName);
     setScreenParams(params);
   };
 
   const goBack = () => {
+    console.log('Going back from:', currentScreen);
     setCurrentScreen(null);
     setScreenParams({});
   };
   
   const renderScreen = () => {
+    console.log('Rendering screen:', currentScreen);
+    
     // If we have a current non-tab screen, render that
     if (currentScreen) {
       switch(currentScreen) {
@@ -45,6 +56,19 @@ const GraduateNavigator = ({ navigation, route }) => {
           return <JobDetailScreen navigation={{ ...navigation, goBack }} route={{ params: screenParams }} />;
         case 'Networking':
           return <NetworkingScreen navigation={{ ...navigation, goBack }} route={{ params: screenParams }} />;
+        case 'VirtualInterviewScreen':
+          console.log('Rendering VirtualInterviewScreen with params:', screenParams);
+          return (
+            <VirtualInterviewScreen 
+              navigation={{ 
+                goBack,
+                navigate: navigateToScreen
+              }} 
+              route={{ 
+                params: screenParams 
+              }} 
+            />
+          );
         default:
           return null;
       }

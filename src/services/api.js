@@ -23,7 +23,7 @@ if (Platform.OS === 'android') {
 console.log('Using API URL:', API_URL); // To help with debugging
 
 const api = axios.create({
-  baseURL: aa06c1d18e08571f4662a8246ad7021d43611b0d685e0fe94bba442720934dfb,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
